@@ -1,0 +1,198 @@
+---
+title: "Project: Volatility, VaR, Expected Shortfall & Portfolio Optimization"
+date: "Cuauhtemoc Daniel Puente Cavazos "
+output: pdf_document
+urlcolor: blue
+geometry: left=0.75in, right=0.75in, top=0.75in, bottom=0.75in
+---
+
+```{r, echo=FALSE}
+if (!require("xts")) install.packages("xts")
+library(xts)
+
+if (!require("ggplot2")) install.packages("ggplot2")
+library(ggplot2)
+
+
+```
+
+
+Load packages
+```{r, message=FALSE, warning=FALSE}
+options(repos = c(CRAN="http://cran.rstudio.com")) 
+if (!require("MASS")) install.packages("MASS")
+if (!require("forecast")) install.packages("forecast")
+if (!require("rugarch")) install.packages("rugarch") 
+if (!require("rmgarch")) install.packages("rmgarch") 
+if (!require("timetk")) install.packages("timetk")
+if (!require("quantmod")) install.packages("quantmod") 
+library(forecast); library(MASS); library(rugarch); library(rmgarch); library(quantmod); library(graphics)
+library(xts); library(timetk); library(stats); library(ggplot2); library(ggfortify); library(ggpubr)
+```
+
+# 1. Univariate Volatility
+
+## 1.1 Data
+
+S&P500 index ([Source](https://finance.yahoo.com/quote/^GSPC/)), for plots see file "9a. Volatility"
+```{r, message=FALSE, warning=FALSE}
+NASDAQ <- quantmod::getSymbols("^IXIC", src="yahoo", return.class="xts", from="2010-01-01", auto.assign=FALSE)
+
+#print(colnames(NASDAQ))
+NASDAQ_close <- NASDAQ[, 4]  
+colnames(NASDAQ_close) <- "NASDAQ"
+NASDAQ_r <- na.omit(diff(log(NASDAQ_close))) * 100
+tail(NASDAQ_close)
+
+```
+
+## 1.2 Univariate Volatility Model 
+ARMA(1,0)-GARCH(1,1) model specification
+```{r}
+model <- rugarch::ugarchspec(
+         variance.model = list(model="sGARCH", garchOrder=c(1, 1)), 
+         mean.model = list(armaOrder=c(1, 0)))
+```
+
+ model fit
+```{r}
+model_fit <- rugarch::ugarchfit(spec=model, data=NASDAQ_r, solver='hybrid')
+```
+
+Forecast
+```{r, warning=FALSE}
+n_future <- 8
+model_forecast <- rugarch::ugarchforecast(fit=model_fit, n.ahead=n_future)
+mean_f <- as.numeric(model_forecast@forecast$seriesFor)/100 # from % to fraction
+std_f <- as.numeric(model_forecast@forecast$sigmaFor)/100 # from % to fraction
+```
+
+## 1.3 Value at Risk
+
+At $\alpha = 1\%$ for a $50,000 position in NASDAQ
+```{r, fig.width=7, fig.height=3}
+VaR_f <- 50000 * abs(mean_f - 2.33 * std_f)
+
+```
+
+Plot
+```{r, fig.width=7, fig.height=3, warning=FALSE}
+id <- timetk::tk_index(NASDAQ_r)
+id_f <- timetk::tk_make_future_timeseries(id, length_out=n_future, inspect_weekdays=TRUE)
+
+VaR_f <- xts(VaR_f, order.by=id_f)
+colnames(VaR_f) <- "VaR"
+
+ggplot(data=VaR_f, aes(x=index(VaR_f), y=VaR)) + 
+  geom_line(color="deeppink4") + 
+  geom_point(color="deeppink4") +
+  labs(x="Date", y="", title = "Forecast of Value at Risk for a $50,000 position in NASDAQ") +
+  theme_minimal() + scale_x_date(date_breaks="1 day", date_labels = "%b %d") +
+  theme(plot.title = element_text(size=10)) 
+```
+
+## 1.4 Expected Shortfall
+
+At $\alpha=1\%$ for a $50,000 position in NASDAQ
+```{r}
+ES_f <- 50000 * abs(mean_f - 2.64 * std_f)
+
+```
+
+Plot
+```{r, fig.width=7, fig.height=3}
+ES_f <- xts(ES_f, order.by=id_f)
+colnames(ES_f) <- "ES"
+
+ggplot(data=ES_f, aes(x=index(ES_f), y=ES)) + 
+  geom_line(color="springgreen4") + 
+  geom_point(color="springgreen4") +
+  labs(x="Date", y="", title = "Forecast of Expected Shortfall for a $50,000 position in NASDAQ") +
+  theme_minimal() + scale_x_date(date_breaks="1 day", date_labels = "%b %d") +
+  theme(plot.title = element_text(size=10))
+```
+
+# 2. Multivariate Volatility
+
+## 2.1 Data
+THis come from, [tickers](https://finance.yahoo.com/lookup/)
+```{r, message=FALSE, warning=FALSE}
+names <- c("Pfizer", "AstraZeneca", "Johnson&Johnson", "Merck", "Eli Lilly", "Bristol-Myers Squibb")
+tickers <- c("PFE", "AZN", "JNJ", "MRK", "LLY", "BMY")
+
+
+color_palette <- c("lightblue3", "darkorange", "yellowgreen", "cyan3")
+```
+
+```{r}
+findat <- quantmod::getSymbols(tickers, src="yahoo", from="2022-06-01")
+prices_lst <- lapply(tickers, function(ticker) {
+  get(ticker)[, paste0(ticker, ".Close")]
+})
+prices <- do.call(merge.xts, prices_lst)
+colnames(prices) <- tickers
+returns <- na.omit(diff(log(prices)))*100 # in % terms
+```
+
+Risk-free asset return, U.S. 3-month Treasury Bills ([Source](https://fred.stlouisfed.org/series/TB3MS))
+```{r}
+rf_rate <- 4.5 / 252
+
+```
+
+## 2.2 Multivariate Volatility Model
+
+DCC model
+```{r}
+# Univariate GARCH model specification
+uni_garch <- rugarch::ugarchspec(
+             variance.model = list(model = 'sGARCH', garchOrder = c(1,1)),  
+             mean.model = list(armaOrder = c(1,1)))
+
+# Replicate the univariate model for each dimension
+dim <- ncol(returns)
+rep_garch <- rugarch::multispec(replicate(dim, uni_garch))
+
+# Formulate the DCC model
+DCC_model <- rmgarch::dccspec(uspec = rep_garch, dccOrder = c(1, 1), model = "DCC")
+
+# Fit the model to the data
+DCC_fit <- rmgarch::dccfit(spec = DCC_model, data = returns, solver = c("hybrid","solnp"))
+```
+
+forecast of the Covariance matrix, 1 step ahead
+```{r}
+fct <- rmgarch::dccforecast(DCC_fit, n.ahead=1)
+S <- fct@mforecast$H[[1]]
+S <- as.matrix(S[,,1])
+S
+```
+
+Invert the forecasted Covariance matrix
+```{r}
+S_inv <- MASS::ginv(S)
+S_inv
+```
+
+forecast of the mean, 1 step ahead
+```{r}
+mu <- fct@mforecast$mu
+mu <- as.vector(mu)
+mu
+```
+
+## 2.3 Optimal Tangency Portfolio Weights
+```{r}
+mu <- as.numeric(mu)
+
+x_star <- (S_inv %*% (mu - rf_rate)) / sum(S_inv %*% (mu - rf_rate))
+x_star
+```
+
+```{r}
+x_star_pct <- x_star * 100
+for (i in seq_along(names)) {
+  cat(sprintf("%-24s: %.2f%%\n", names[i], x_star_pct[i]))
+}
+
+```
