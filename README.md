@@ -8,16 +8,12 @@
 ![Time Series](https://img.shields.io/badge/Time%20Series-16A085?style=for-the-badge)
 ![Portfolio Optimization](https://img.shields.io/badge/Portfolio%20Optimization-E67E22?style=for-the-badge)
 
+[![Website](https://img.shields.io/badge/Website-cudapuca.base44.app-black?style=for-the-badge)](https://cudapuca.base44.app)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Daniel%20Puente-blue?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/danielpuente/)
+[![Instagram](https://img.shields.io/badge/Instagram-dandrunner-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/dandrunner)
+
 > Built as part of advanced coursework in Financial Econometrics and Time Series Analysis at the University of Toronto.
 
-## Quick Links
-
-
-💼 [LinkedIn](https://www.linkedin.com/in/danielpuente/)
-
-🌐 [Personal Website](https://cudapuca.base44.app)
-
-🏃 [Running Account](https://www.instagram.com/dandrunner)
 
 ---
 
