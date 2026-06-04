@@ -32,8 +32,6 @@ I became more interested in a different question:
 
 This project was my introduction to the world of quantitative finance. Using volatility models, risk measures, and portfolio optimization techniques, I explored how investors can better understand uncertainty rather than simply chase returns.
 
-Along the way, I discovered that managing risk is often just as important as finding opportunities, a lesson that continues to shape how I think about finance, analytics, and decision-making.
-
 ---
 
 ## Project Overview
@@ -156,7 +154,7 @@ Most importantly, I learned how statistical models can support investment decisi
 
 ---
 
-## Skills Demonstrated
+## Skills 🥵🔥
 
 ### Quantitative Finance
 
