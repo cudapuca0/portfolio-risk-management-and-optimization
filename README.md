@@ -12,7 +12,6 @@
 
 ## Quick Links
 
-📄 [Project Report](./Project_Report.pdf)
 
 💼 [LinkedIn](https://www.linkedin.com/in/danielpuente/)
 
@@ -217,18 +216,3 @@ portfolio-risk-management-and-optimization/
 ## About Me
 
 I'm **Daniel Puente**, a Statistics and Economics graduate from the University of Toronto and an incoming Master of Management in Analytics student at McGill University.
-
-My interests include:
-
-- Quantitative Finance
-- Financial Analytics
-- Machine Learning
-- Data Science
-- Economic Research
-- Risk Analytics
-
-Outside of analytics, you'll usually find me training for a marathon, learning a new language, traveling, or exploring how data can help us better understand the world around us.
-
----
-
-> *"Risk cannot be eliminated, but it can be measured, understood, and managed."*
