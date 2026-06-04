@@ -202,13 +202,6 @@ portfolio-risk-management-and-optimization/
 ├── README.md
 ├── Project_Report.pdf
 ├── Volatility, VaR, Expected Shortfall & Portfolio Optimization.Rmd
-│
-├── figures/
-│   ├── var_forecast.png
-│   ├── expected_shortfall.png
-│   └── portfolio_weights.png
-│
-└── data/
 ```
 
 ---
